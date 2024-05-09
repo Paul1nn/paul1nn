@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lector de tarjetas USB</title>
+</head>
+<body>
+    <button id="connectButton">Conectar al lector de tarjetas</button>
+    <div id="dataDisplay"></div>
+
+    <script>
+        let device;
+
+        document.getElementById('connectButton').addEventListener('click', async () => {
+            try {
+                device = await navigator.usb.requestDevice({ filters: [] });
+                console.log('Dispositivo conectado:', device);
+
+                await device.open();
+                await device.selectConfiguration(1);
+                await device.claimInterface(0);
+                
+                // Lector de tarjetas USB típicamente utiliza transferencia de control (control transfer) para enviar comandos y recibir datos.
+                const result = await device.controlTransferIn({
+                    requestType: 'class',
+                    recipient: 'interface',
+                    request: 0x6,
+                    value: 0x300,
+                    index: 0x0
+                }, 64);
+
+                console.log('Datos leídos:', result.data);
+                document.getElementById('dataDisplay').innerText = 'Datos leídos: ' + result.data;
+            } catch (error) {
+                console.error('Error al conectar el dispositivo:', error);
+            }
+        });
+    </script>
+</body>
+</html>
